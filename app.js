@@ -16,8 +16,11 @@ const users = require('./routes/users')
 // Passport Congig
 require('./config/passport')(passport)
 
+// DB Config
+const db = require('./config/database')
+
 // Connect to mongoose
-mongoose.connect('mongodb://localhost/youjot-dev', {
+mongoose.connect(db.mongoURI, {
     useNewUrlParser: true
 })
 .then(()=> console.log('Mongodb connected...'))
@@ -55,6 +58,10 @@ app.use(session({
     saveUninitialized: true
 }))
 
+// Parse passport middleware
+app.use(passport.initialize())
+app.use(passport.session())
+
 // Parse Express-session
 app.use(flash())
 
@@ -62,6 +69,7 @@ app.use(flash())
 app.use( (req, res, next) => {
     res.locals.successMsg = req.flash('successMsg')
     res.locals.errorMsg = req.flash('errorMsg')
+    res.locals.user = req.user || null
     next()
 })
 
@@ -81,7 +89,7 @@ app.use('/ideas', ideas)
 // Use User routes
 app.use('/users', users)
 
-const port = 5000
+const port = process.env.PORT || 5000
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`)

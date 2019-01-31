@@ -89,4 +89,10 @@ router.post("/signup", (req, res) => {
   }
 })
 
+router.get('/logout', (res, req) => {
+  req.logout()
+  req.flash('successMsg', 'You are logged out')
+  res.redirect('/user/login')
+})
+
 module.exports = router

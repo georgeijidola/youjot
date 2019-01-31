@@ -1,96 +1,103 @@
-const express = require("express");
-const mongoose = require("mongoose");
+const express = require("express")
+const mongoose = require("mongoose")
 
-const router = express.Router();
+const router = express.Router()
+const {ensureAuthenticated} = require('../helpers/auth')
 
 // Load Idea Model
-require("../models/Idea");
-const Idea = mongoose.model("ideas");
+require("../models/Idea")
+const Idea = mongoose.model("ideas")
 
 // Ideas index page
-router.get("/", (req, res) => {
-  Idea.find()
+router.get("/", ensureAuthenticated, (req, res) => {
+  Idea.find({user: req.user.id})
     .sort({ date: "desc" })
     .then(ideas => {
       res.render("ideas/index", {
         ideas: ideas
-      });
-    });
-});
+      })
+    })
+})
 
 // Add Idea Form
-router.get("/add", (req, res) => {
-  res.render("ideas/add");
-});
+router.get("/add", ensureAuthenticated, (req, res) => {
+  res.render("ideas/add")
+})
 
 // Add Edit Idea Form
-router.get("/edit/:id", (req, res) => {
+router.get("/edit/:id", ensureAuthenticated, (req, res) => {
   Idea.findOne({
     _id: req.params.id
   }).then(idea => {
-    res.render("ideas/edit", {
-      idea: idea
-    });
-  });
-});
+    if(idea.user != req.user.id) {
+      res.render('errors/error401')
+    } else {
+      res.render("ideas/edit", {
+        idea: idea
+      })
+    }
+  })
+})
 
 // Process Form
-router.post("/ideas", (req, res) => {
-  const title = req.body.title;
-  const details = req.body.details;
+router.post("/ideas", ensureAuthenticated, (req, res) => {
+  const title = req.body.title
+  const details = req.body.details
+  const user = req.body.id
 
   if (!title || !details) {
     if (!title) {
-      req.flash("errorMsg", "Please add a title");
+      req.flash("errorMsg", "Please add a title")
     }
     if (!details) {
-      req.flash("errorMsg", "Please add details");
+      req.flash("errorMsg", "Please add details")
     }
     res.render("ideas/add", {
       title: title,
       details: details
-    });
+    })
   } else {
     const newUser = {
       title: title,
-      details: details
-    };
+      details: details,
+      user: user
+    }
     new Idea(newUser).save().then(idea => {
-      req.flash("successMsg", "Video Idea added");
-      res.redirect("/ideas");
-    });
+      req.flash("successMsg", "Video Idea added")
+      res.redirect("/ideas")
+    })
   }
-});
+})
 
 // Idea update
-router.put("/:id", (req, res) => {
-  const title = req.body.title;
-  const details = req.body.details;
+router.put("/:id", ensureAuthenticated, (req, res) => {
+  const title = req.body.title
+  const details = req.body.details
 
   Idea.findOne({
     _id: req.params.id
   }).then(idea => {
     // New values
-    Idea.title = title;
-    console.log(`received ${Idea.title}`);
-    Idea.details = details;
+    Idea.title = title
+    console.log(`received ${Idea.title}`)
+    Idea.details = details
 
     idea.save().then(idea => {
-      console.log(idea);
-      req.flash("successMsg", "Video Idea updated");
-      console.log(idea.save());
-      res.redirect("/ideas");
-    });
-  });
-});
+      console.log(idea)
+      req.flash("successMsg", "Video Idea updated")
+      console.log(idea.save())
+      res.redirect("/ideas")
+    })
+  })
+})
 
 // Delete Idea
-router.delete("/:id", (req, res) => {
+router.delete("/:id", ensureAuthenticated, (req, res) => {
   Idea.deleteOne({
     _id: req.params.id
   }).then(idea => {
-    res.redirect("/ideas");
-  });
-});
+    res.redirect("/ideas")
+  })
+})
 
-module.exports = router;
+module.exports = router

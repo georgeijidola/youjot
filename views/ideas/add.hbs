@@ -3,11 +3,11 @@
     <form action="/ideas" method="post">
         <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" name="title" class="form-control" required>
+            <input type="text" name="title" value="{{title}}" class="form-control" required>
         </div>
         <div class="form-group">
             <label for="details">Details</label>
-            <textarea type="text" name="details" class="form-control" required></textarea>
+            <textarea type="text" name="details" value="{{details}}" class="form-control" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>

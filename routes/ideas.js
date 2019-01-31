@@ -40,10 +40,10 @@ router.get("/edit/:id", ensureAuthenticated, (req, res) => {
 })
 
 // Process Form
-router.post("/ideas", ensureAuthenticated, (req, res) => {
+router.post("/", ensureAuthenticated, (req, res) => {
   const title = req.body.title
   const details = req.body.details
-  const user = req.body.id
+  const user = req.user.id
 
   if (!title || !details) {
     if (!title) {
@@ -57,12 +57,12 @@ router.post("/ideas", ensureAuthenticated, (req, res) => {
       details: details
     })
   } else {
-    const newUser = {
+    const newIdea = {
       title: title,
       details: details,
       user: user
     }
-    new Idea(newUser).save().then(idea => {
+    new Idea(newIdea).save().then(idea => {
       req.flash("successMsg", "Video Idea added")
       res.redirect("/ideas")
     })

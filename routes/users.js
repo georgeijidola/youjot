@@ -16,68 +16,70 @@ router.get("/login", (req, res) => {
 
 // User Login Auth
 router.post("/login", (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/ideas',
-        failureRedirect: '/ideas/login',
-        failureFlash: true
-    })(req, res, next)
-  })
+  passport.authenticate('local', {
+      successRedirect: '/ideas',
+      failureRedirect: '/users/login',
+      failureFlash: true
+  })(req, res, next)
+})
 
-  
 // User Signup Login
 router.get("/signup", (req, res) => {
   res.render("users/signup")
 })
 
 // New User
-router.post("/signup", (req, res) => {
-    console.log('Check 1')
-  let errors = []
+router.post("/signup", (req, res, next) => {
+  const firstName = req.body.firstName
+  const lastName = req.body.lastName
+  const email = req.body.email
+  const phoneNo = req.body.phoneNo
+  const password = req.body.password
+  const confirmPassword = req.body.confirmPassword
+  const isAdmin = false
 
-  if (req.body.password != req.body.confirmPassword) {
-    errors.push({ text: "Passwords do not match" })
-  }
+  if ((password != confirmPassword) || (password.length < 8)) {
+    if (password != confirmPassword) {
+      req.flash("errorMsg", " Passwords do not match" )
+    }
+  
+    if (password.length < 8) {
+      req.flash("errorMsg", " Password must be at least 8 characters")
+    }
 
-  if (req.body.password.length < 8) {
-    errors.push({ text: "Password must be at least 8 characters" })
-  }
-
-  if (errors.length > 0) {
-    console.log('Check 2')
     res.render("users/signup", {
-      errors: errors,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phoneNo: req.body.phoneNo,
-      password: req.body.password,
-      confirmPassword: req.body.confirmPassword
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phoneNo: phoneNo
     })
   } else {
-    User.findOne({ email: req.body.email }).then(user => {
+    User.findOne({ email: email }).then(user => {
       if (user) {
-        req.flash("errorMsg", "Email already used")
-        console.log('Check 3')
+        req.flash("errorMsg", " Email already used")
         res.redirect("/users/signup")
       } else {
-        console.log('Check 4')
         const newUser = new User({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          email: req.body.email,
-          phoneNo: req.body.phoneNo,
-          password: req.body.password
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phoneNo: phoneNo,
+          password: password,
+          isAdmin: isAdmin
         })
         bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.passowrd, salt, (err, hash) => {
+          bcrypt.hash(newUser.password, salt, (err, hash) => {
             // if(err) throw err
-            console.log('Check 5')
             newUser.password = hash
             newUser
               .save()
-              console.log('Check 6')
               .then(user => {
-                req.flash("successMsg", "You are now registered and logged in")
+                passport.authenticate('local', {
+                  successRedirect: '/ideas',
+                  failureRedirect: '/users/login',
+                  failureFlash: true
+                })(req, res, next)
+                req.flash("successMsg", " You are now registered and logged in")
               })
               .catch(err => {
                 return
@@ -89,10 +91,11 @@ router.post("/signup", (req, res) => {
   }
 })
 
-router.get('/logout', (res, req) => {
+// User logout
+router.get('/logout', (req, res) => {
   req.logout()
   req.flash('successMsg', 'You are logged out')
-  res.redirect('/user/login')
+  res.redirect('/users/login')
 })
 
 module.exports = router

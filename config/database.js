@@ -1,6 +1,6 @@
 if (process.env.NODE_ENV === "production") {
   module.exports = {
-    mongoURI: "mongodb://<dbuser>:<dbpassword>@ds117535.mlab.com:17535/youjot-prod"
+    mongoURI: "mongodb://superuser:1superuser@ds153906.mlab.com:53906/youjot-prod"
   }
 } else {
   module.exports = { 
